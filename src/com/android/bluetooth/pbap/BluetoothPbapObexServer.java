@@ -458,6 +458,10 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
 
         public boolean vcard21;
 
+        public byte[] filter;
+
+        public boolean ignorefilter;
+
         public AppParamValue() {
             maxListCount = 0xFFFF;
             listStartOffset = 0;
@@ -466,6 +470,9 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
             order = "";
             needTag = 0x00;
             vcard21 = true;
+            //Filter is not set by default
+            ignorefilter = true;
+            filter = new byte[] {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00} ;
         }
 
         public void dump() {
@@ -480,10 +487,17 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
             AppParamValue appParamValue) {
         int i = 0;
         boolean parseOk = true;
-        while (i < appParam.length) {
+        while ((i < appParam.length) && (parseOk == true)) {
             switch (appParam[i]) {
                 case ApplicationParameter.TRIPLET_TAGID.FILTER_TAGID:
                     i += 2; // length and tag field in triplet
+                    for (int index=0; index < ApplicationParameter.TRIPLET_LENGTH.FILTER_LENGTH;
+                         index++) {
+                        if (appParam[i+index] != 0){
+                            appParamValue.ignorefilter = false;
+                            appParamValue.filter[index] = appParam[i+index];
+                        }
+                    }
                     i += ApplicationParameter.TRIPLET_LENGTH.FILTER_LENGTH;
                     break;
                 case ApplicationParameter.TRIPLET_TAGID.ORDER_TAGID:
@@ -882,7 +896,7 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
                 return pushBytes(op, ownerVcard);
             } else {
                 return mVcardManager.composeAndSendPhonebookOneVcard(op, intIndex, vcard21, null,
-                        mOrderBy);
+                        mOrderBy, appParamValue.ignorefilter, appParamValue.filter);
             }
        } else if (appParamValue.needTag == ContentType.SIM_PHONEBOOK) {
             if (intIndex < 0 || intIndex >= size) {
@@ -905,7 +919,7 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
             // begin from 1.vcf
             if (intIndex >= 1) {
                 return mVcardManager.composeAndSendCallLogVcards(appParamValue.needTag, op,
-                        intIndex, intIndex, vcard21);
+                        intIndex, intIndex, vcard21, appParamValue.ignorefilter, appParamValue.filter);
             }
         }
         return ResponseCodes.OBEX_HTTP_OK;
@@ -967,11 +981,11 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
                     return pushBytes(op, ownerVcard);
                 } else {
                     return mVcardManager.composeAndSendPhonebookVcards(op, 1, endPoint, vcard21,
-                            ownerVcard);
+                            ownerVcard, appParamValue.ignorefilter, appParamValue.filter);
                 }
             } else {
                 return mVcardManager.composeAndSendPhonebookVcards(op, startPoint, endPoint,
-                        vcard21, null);
+                        vcard21, null, appParamValue.ignorefilter, appParamValue.filter);
             }
         } else if (appParamValue.needTag == BluetoothPbapObexServer.ContentType.SIM_PHONEBOOK) {
             if (startPoint == 0) {
@@ -988,7 +1002,7 @@ public class BluetoothPbapObexServer extends ServerRequestHandler {
             }
         } else {
             return mVcardManager.composeAndSendCallLogVcards(appParamValue.needTag, op,
-                    startPoint + 1, endPoint + 1, vcard21);
+                    startPoint + 1, endPoint + 1, vcard21, appParamValue.ignorefilter, appParamValue.filter);
         }
     }
 
