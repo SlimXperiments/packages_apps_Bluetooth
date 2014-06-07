@@ -384,7 +384,6 @@ public class BluetoothMnsObexClient {
         Log.e(TAG, "Error when sending event: " + exception);
     }
 
-<<<<<<< HEAD
     private void acquireMnsLock() {
         if (V) Log.v(TAG, "About to acquire Mns:mWakeLock");
         if (mWakeLock == null) {
@@ -410,11 +409,11 @@ public class BluetoothMnsObexClient {
             }
             mWakeLock = null;
         }
-=======
+    }
+
     private void notifyUpdateWakeLock() {
         Message msg = Message.obtain(mCallback);
         msg.what = BluetoothMapService.MSG_ACQUIRE_WAKE_LOCK;
         msg.sendToTarget();
->>>>>>> aosp/master
     }
 }

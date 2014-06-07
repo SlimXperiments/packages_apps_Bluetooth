@@ -51,6 +51,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.telephony.TelephonyManager;
@@ -144,6 +145,8 @@ public class BluetoothPbapService extends Service {
     private static final int NOTIFICATION_ID_ACCESS = -1000001;
 
     private static final int NOTIFICATION_ID_AUTH = -1000002;
+    
+    private PowerManager.WakeLock mWakeLock = null;
 
     private BluetoothAdapter mAdapter;
 
